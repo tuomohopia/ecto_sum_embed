@@ -1,6 +1,32 @@
 # EctoSumEmbeds
+> Embed sum types with `embeds_one_of` in Ecto
 
-**TODO: Add description**
+```elixir
+defmodule Answer do
+  use EctoSumEmbeds
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  schema "answers" do
+    field :name, :string
+
+    embeds_one_of :answer do 
+      option :boolean, Boolean
+      option :choose_one, ChooseOne
+
+      opts tag_key: :tag, source: :answer, :on_replace: :raise
+    end
+
+    has_many :questions, Question
+  end
+
+  def changeset(attrs) do
+    %__MODULE__{}
+    |> cast(attrs, [:name])
+    |> cast_embed(:answer)
+  end
+end
+```
 
 ## Installation
 

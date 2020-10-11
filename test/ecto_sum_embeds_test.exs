@@ -11,8 +11,8 @@ defmodule EctoSumEmbedsTest do
         field :answer, :boolean
       end
 
-      def changeset(attrs) do
-        %__MODULE__{}
+      def changeset(schema \\ %__MODULE__{}, attrs) do
+        schema
         |> cast(attrs, [:answer])
       end
     end
@@ -39,7 +39,7 @@ defmodule EctoSumEmbedsTest do
 
       schema "answers" do
         field :name, :string
-        embeds_one_of :answer, [ChooseOne, Boolean]
+        embeds_one_of :answer, choose_one: ChooseOne, boolean: Boolean
         embeds_one :choose_one_normal, ChooseOne
       end
 
