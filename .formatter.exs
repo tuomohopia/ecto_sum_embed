@@ -1,5 +1,7 @@
 locals_without_parens = [
-  embeds_one_of: 2
+  embeds_one_of: 2,
+  option: 2,
+  option: 3
 ]
 
 [

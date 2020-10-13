@@ -12,6 +12,40 @@ defmodule EctoSumEmbeds do
     end
   end
 
+  defmacro option(name, schema, opts \\ []) do
+    IO.inspect(name, label: "option name")
+    IO.inspect(__ENV__, label: "env")
+
+    quote do
+      EctoSumEmbeds.option(__MODULE__, unquote(name), unquote(schema), unquote(opts))
+    end
+  end
+
+  defmacro embeds_one_of(name, do: block) do
+    IO.puts(
+      "------------------------------------------------------------------------------------------------------"
+    )
+
+    # Add `name` (name of the polymorphic field) as the first
+    # parameter to `option/
+    prewalk_result =
+      Macro.prewalk(block, fn expr ->
+        case expr do
+          {:option, line, args} -> {:option, line, [name] ++ args}
+          whatever -> whatever
+        end
+      end)
+
+    IO.inspect(prewalk_result, label: "prewalk result")
+
+    IO.inspect(name, label: "name")
+    IO.inspect(block, label: "do block")
+
+    IO.puts(
+      "------------------------------------------------------------------------------------------------------"
+    )
+  end
+
   defmacro embeds_one_of(name, opts) when is_list(opts) do
     # IO.inspect(schema, label: "schema before")
     # schema = expand_alias(schema, __CALLER__)
@@ -82,16 +116,24 @@ defmodule EctoSumEmbeds do
           IO.inspect(@ecto_sum_embeds, label: "attributes")
           # Infer cast embedded schema module first
           # Then use that module's Changeset
-          embedded_module = get_module(params, :tag)
-          struct = struct(embedded_module)
-          Kernel.apply(embedded_module, :changeset, [struct, params])
+          case get_module(params, :tag) do
+            {:ok, embedded_module} ->
+              struct = struct(embedded_module)
+              Kernel.apply(embedded_module, :changeset, [struct, params])
+
+            :error ->
+              custom = [validation: :cast, type: :ecto_sum_embeds]
+
+              Changeset.cast(%__MODULE__{}, %{}, [])
+              |> Changeset.add_error(@tag_key, "cannot detect correct type", custom)
+          end
         end
 
         # Default function
         defp get_module(params, tag_key) do
           with {:ok, tag} <- Map.fetch(params, tag_key),
                {:ok, module} <- Map.fetch(@ecto_sum_embeds, tag) do
-            module
+            {:ok, module}
           end
         end
       end
@@ -103,6 +145,9 @@ defmodule EctoSumEmbeds do
     current = Module.get_attribute(module, attribute)
     updated = Map.put(current, key, value)
     Module.put_attribute(module, attribute, updated)
+  end
+
+  def option(mod, name, schema, opts) do
   end
 
   defp expand_alias({:__aliases__, _, _} = ast, env),

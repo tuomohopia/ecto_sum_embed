@@ -29,6 +29,7 @@ defmodule EctoSumEmbedsTest do
       def changeset(schema \\ %__MODULE__{}, attrs) do
         schema
         |> cast(attrs, [:one])
+        |> validate_required([:one])
       end
     end
 
@@ -40,6 +41,13 @@ defmodule EctoSumEmbedsTest do
       schema "answers" do
         field :name, :string
         embeds_one_of :answer, choose_one: ChooseOne, boolean: Boolean
+
+        embeds_one_of :hello do
+          option :foo, :string
+          field :bar, :string
+          option :choose_one, ChooseOne
+        end
+
         embeds_one :choose_one_normal, ChooseOne
       end
 
@@ -48,6 +56,7 @@ defmodule EctoSumEmbedsTest do
         |> cast(attrs, [:name])
         |> cast_embed(:choose_one_normal)
         |> cast_embed(:answer)
+        |> validate_required([:name, :answer, :choose_one_normal])
       end
     end
 
@@ -64,6 +73,19 @@ defmodule EctoSumEmbedsTest do
       IO.inspect(Answer.changeset(attrs) |> Ecto.Changeset.apply_changes(),
         label: "Changeset after applying"
       )
+    end
+
+    test "Cast failures" do
+      attrs = %{
+        name: 3,
+        answer: %{tag: "whatever"},
+        choose_one_normal: %{}
+      }
+
+      changeset = Answer.changeset(attrs)
+      assert %Ecto.Changeset{} = changeset
+
+      IO.inspect(changeset, label: "cast failure changeset")
     end
   end
 end
