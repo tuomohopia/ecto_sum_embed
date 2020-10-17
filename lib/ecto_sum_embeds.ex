@@ -19,22 +19,19 @@ defmodule EctoSumEmbeds do
   end
 
   defmacro embeds_one_of(name, do: block) when is_atom(name) do
-    caller = __CALLER__
-
-    # 1. Add caller to `option/3` arguments for constructing
+    # 1. Add `__CALLER__` to each `option/3` arguments for constructing
     # full embedded schema module path.
-    ast_with_option_converted =
+    block =
       Macro.prewalk(block, fn expr ->
         case expr do
           {:option, line, args} ->
-            {:option, line, [caller] ++ args}
+            {:option, line, [__CALLER__] ++ args}
 
           whatever ->
             whatever
         end
       end)
 
-    # 2. `option/3` registers
     caller = __CALLER__.module
 
     quote do
@@ -44,13 +41,11 @@ defmodule EctoSumEmbeds do
         EctoSumEmbeds.create_embedded_module(
           unquote(name),
           unquote(caller),
-          unquote(Macro.escape(ast_with_option_converted))
+          unquote(Macro.escape(block))
         )
 
-      # Puts the attributes to `__MODULE__` which means `Answer` in my example.
-      # It embeds the macro-generated `module`, based on the `embeds_one_of` name to it
-      # as the only `embeds_one` module. This is so that `cast_embed` from the main Changeset
-      # will trigger this module's `changeset/2` where the polymorphic determination happens.
+      # Embeds the macro-generated host `embedded_schema` module
+      # so that that module can catch `cast_embed/3` calls.
       Ecto.Schema.__embeds_one__(__MODULE__, unquote(name), module, [])
     end
   end
@@ -83,11 +78,11 @@ defmodule EctoSumEmbeds do
         end
 
         def changeset(module, params) do
-          # Infer cast embedded schema module first
-          # Then use that module's Changeset
+          # Infer cast embedded schema module
           case get_module(params, :tag) do
             {:ok, embedded_module} ->
               struct = struct(embedded_module)
+              # Then use that module's `changeset/2`
               Kernel.apply(embedded_module, :changeset, [struct, params])
 
             :error ->
@@ -100,7 +95,7 @@ defmodule EctoSumEmbeds do
                 |> Enum.join(", ")
 
               err_msg =
-                "Cannot detect correct polymorphic type. Supplied tag key :#{@tag_key} value should be one of: #{
+                "Cannot detect correct embed sum type member. Supplied tag key :#{@tag_key} value should be one of: #{
                   tag_values
                 }"
 
@@ -110,7 +105,9 @@ defmodule EctoSumEmbeds do
           end
         end
 
-        # Default function
+        # Default polymorhic inference function
+        # that takes the external data and picks
+        # the correct polymorphic member.
         defp get_module(params, tag_key) do
           case Map.fetch(params, tag_key) do
             {:ok, tag} ->
@@ -126,11 +123,8 @@ defmodule EctoSumEmbeds do
   end
 
   def __option__(mod, name, schema) do
-    add_to_attribute(
-      mod,
-      :ecto_sum_embeds,
-      {to_string(name), schema}
-    )
+    pair = {to_string(name), schema}
+    add_to_attribute(mod, :ecto_sum_embeds, pair)
   end
 
   # Internal
