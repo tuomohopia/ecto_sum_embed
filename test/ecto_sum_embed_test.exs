@@ -1,4 +1,4 @@
-defmodule EctoSumEmbedsTest do
+defmodule EctoSumEmbedTest do
   use ExUnit.Case
 
   describe "Sum embed" do
@@ -34,10 +34,10 @@ defmodule EctoSumEmbedsTest do
     end
 
     defmodule Answer do
-      use EctoSumEmbeds
+      use EctoSumEmbed
       use Ecto.Schema
       import Ecto.Changeset
-      alias EctoSumEmbedsTest.{Boolean, ChooseOne}
+      alias EctoSumEmbedTest.{Boolean, ChooseOne}
 
       schema "answers" do
         field :name, :string
@@ -70,7 +70,7 @@ defmodule EctoSumEmbedsTest do
       changeset = Answer.changeset(attrs)
       assert %Ecto.Changeset{} = changeset
 
-      assert %Answer{answer: %EctoSumEmbedsTest.ChooseOne{}} =
+      assert %Answer{answer: %EctoSumEmbedTest.ChooseOne{}} =
                Ecto.Changeset.apply_changes(changeset)
 
       # Boolean
@@ -82,7 +82,7 @@ defmodule EctoSumEmbedsTest do
       changeset2 = Answer.changeset(attrs2)
       assert %Ecto.Changeset{} = changeset
 
-      assert %Answer{answer: %EctoSumEmbedsTest.Boolean{}} =
+      assert %Answer{answer: %EctoSumEmbedTest.Boolean{}} =
                Ecto.Changeset.apply_changes(changeset2)
     end
 
