@@ -24,7 +24,8 @@ defmodule EctoSumEmbeds.MixProject do
       {:ecto, "~> 3.5"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
-      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:credo, "~> 1.5.0-rc.2", only: [:dev, :test], runtime: false}
     ]
   end
 end

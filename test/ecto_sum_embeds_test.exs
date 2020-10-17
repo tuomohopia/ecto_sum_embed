@@ -95,9 +95,6 @@ defmodule EctoSumEmbedsTest do
 
       changeset = Answer.changeset(attrs)
       assert %Ecto.Changeset{valid?: false} = changeset
-      IO.inspect(changeset, label: "changeset")
-
-      # IO.inspect(changeset, label: "cast failure changeset")
     end
   end
 end

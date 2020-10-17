@@ -10,26 +10,24 @@ defmodule EctoSumEmbeds do
     end
   end
 
-  defmacro option(caller, _embeds_one_of, field, schema) do
-    opts = []
+  defmacro option(caller, field, schema) do
     schema_full = Macro.expand(schema, caller)
 
     quote do
-      EctoSumEmbeds.__option__(__MODULE__, unquote(field), unquote(schema_full), unquote(opts))
+      EctoSumEmbeds.__option__(__MODULE__, unquote(field), unquote(schema_full))
     end
   end
 
   defmacro embeds_one_of(name, do: block) when is_atom(name) do
-    IO.puts("defmacro embeds_one_of")
     caller = __CALLER__
 
-    # 1. Add `name` (name of the polymorphic field) as the first
-    # parameter to `option/3`
+    # 1. Add caller to `option/3` arguments for constructing
+    # full embedded schema module path.
     ast_with_option_converted =
       Macro.prewalk(block, fn expr ->
         case expr do
           {:option, line, args} ->
-            {:option, line, [caller, name] ++ args}
+            {:option, line, [caller] ++ args}
 
           whatever ->
             whatever
@@ -38,7 +36,6 @@ defmodule EctoSumEmbeds do
 
     # 2. `option/3` registers
     caller = __CALLER__.module
-    IO.puts("entering embeds_one_of quote")
 
     quote do
       # Create host module
@@ -50,8 +47,6 @@ defmodule EctoSumEmbeds do
           unquote(Macro.escape(ast_with_option_converted))
         )
 
-      IO.inspect(module, label: "created module")
-
       # Puts the attributes to `__MODULE__` which means `Answer` in my example.
       # It embeds the macro-generated `module`, based on the `embeds_one_of` name to it
       # as the only `embeds_one` module. This is so that `cast_embed` from the main Changeset
@@ -61,9 +56,6 @@ defmodule EctoSumEmbeds do
   end
 
   def create_embedded_module(field, base_module, option_ast) do
-    IO.puts("def create_embedded_module")
-    IO.inspect(option_ast, label: "option ast")
-
     module_name =
       field
       |> Atom.to_string()
@@ -91,14 +83,10 @@ defmodule EctoSumEmbeds do
         end
 
         def changeset(module, params) do
-          IO.inspect(module, label: "changeset module")
-          IO.inspect(params, label: "changeset params")
-          IO.inspect(@ecto_sum_embeds, label: "attributes")
           # Infer cast embedded schema module first
           # Then use that module's Changeset
           case get_module(params, :tag) do
             {:ok, embedded_module} ->
-              IO.inspect(embedded_module, label: "embedded module")
               struct = struct(embedded_module)
               Kernel.apply(embedded_module, :changeset, [struct, params])
 
@@ -112,7 +100,7 @@ defmodule EctoSumEmbeds do
                 |> Enum.join(", ")
 
               err_msg =
-                "Cannot detect correct polymorphic type. Supplied #{@tag_key} value should be one of: #{
+                "Cannot detect correct polymorphic type. Supplied tag key :#{@tag_key} value should be one of: #{
                   tag_values
                 }"
 
@@ -124,11 +112,12 @@ defmodule EctoSumEmbeds do
 
         # Default function
         defp get_module(params, tag_key) do
-          IO.puts("def get_module")
+          case Map.fetch(params, tag_key) do
+            {:ok, tag} ->
+              Map.fetch(@ecto_sum_embeds, tag)
 
-          with {:ok, tag} <- Map.fetch(params, tag_key),
-               {:ok, module} <- Map.fetch(@ecto_sum_embeds, tag) do
-            {:ok, module}
+            _ ->
+              :error
           end
         end
       end
@@ -136,23 +125,19 @@ defmodule EctoSumEmbeds do
     Module.create(module, ast, Macro.Env.location(__ENV__))
   end
 
-  def add_to_attribute(module, attribute, {key, value}) do
-    IO.puts("def add_to_attribute")
-    IO.inspect(module, label: "add_to_attribute mod:")
-    current = Module.get_attribute(module, attribute)
-    IO.inspect(current, label: "current")
-    updated = Map.put(current, key, value)
-    Module.put_attribute(module, attribute, updated)
-  end
-
-  def __option__(mod, name, schema, _opts) do
-    IO.puts("def __option__")
-    IO.inspect(Module.get_attribute(mod, :ecto_sum_embeds), label: ":ecto_sum_embeds fields")
-
+  def __option__(mod, name, schema) do
     add_to_attribute(
       mod,
       :ecto_sum_embeds,
       {to_string(name), schema}
     )
+  end
+
+  # Internal
+
+  defp add_to_attribute(module, attribute, {key, value}) do
+    current = Module.get_attribute(module, attribute)
+    updated = Map.put(current, key, value)
+    Module.put_attribute(module, attribute, updated)
   end
 end

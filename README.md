@@ -1,5 +1,7 @@
 # EctoSumEmbeds
+[![Build Status](https://travis-ci.com/tuomohopia/ecto_sum_embed.svg?token=kkyD4t9rsytpc3U64M9V&branch=master)](https://travis-ci.com/tuomohopia/ecto_sum_embed)
 > Embed sum types with `embeds_one_of` in Ecto
+---
 
 ```elixir
 defmodule Answer do

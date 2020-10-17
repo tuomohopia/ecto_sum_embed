@@ -39,11 +39,11 @@ jobs:
     env:
     - MIX_ENV=test
     script: mix test
-#   - stage: Credo
-#     name: Elixir v1.11.1
-#     env:
-#     - MIX_ENV=dev
-#     script: mix credo
+  - stage: Credo
+    name: Elixir v1.11.1
+    env:
+    - MIX_ENV=dev
+    script: mix credo
   - stage: Compile test (warnings as errors)
     name: Elixir v1.11.1
     env:
