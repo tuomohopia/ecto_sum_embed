@@ -1,3 +1,5 @@
+os: linux
+dist: xenial
 git:
   depth: 5
 language: elixir
@@ -22,7 +24,7 @@ env:
 
 
 before_script:
-- cp config/travis.exs config/test.exs
+# - cp config/travis.exs config/test.exs
 - psql --version
 - mix deps.get
 - mix compile
