@@ -1,7 +1,7 @@
 defmodule EctoSumEmbedsTest do
   use ExUnit.Case
 
-  describe "Works" do
+  describe "Sum embed" do
     defmodule Boolean do
       use Ecto.Schema
       import Ecto.Changeset
@@ -37,14 +37,13 @@ defmodule EctoSumEmbedsTest do
       use EctoSumEmbeds
       use Ecto.Schema
       import Ecto.Changeset
+      alias EctoSumEmbedsTest.{Boolean, ChooseOne}
 
       schema "answers" do
         field :name, :string
-        embeds_one_of :answer, choose_one: ChooseOne, boolean: Boolean
 
-        embeds_one_of :hello do
-          option :foo, :string
-          field :bar, :string
+        embeds_one_of :answer do
+          option :boolean, Boolean
           option :choose_one, ChooseOne
         end
 
@@ -60,19 +59,31 @@ defmodule EctoSumEmbedsTest do
       end
     end
 
-    test "Changeset works" do
+    test "Changeset produces correct polymorphic type" do
+      # ChooseOne
       attrs = %{
         name: "Elvis",
         answer: %{tag: "choose_one", one: "happy"},
         choose_one_normal: %{one: "Good"}
       }
 
-      assert %Ecto.Changeset{} = Answer.changeset(attrs)
-      # Answer.Answer.hello()
+      changeset = Answer.changeset(attrs)
+      assert %Ecto.Changeset{} = changeset
 
-      IO.inspect(Answer.changeset(attrs) |> Ecto.Changeset.apply_changes(),
-        label: "Changeset after applying"
-      )
+      assert %Answer{answer: %EctoSumEmbedsTest.ChooseOne{}} =
+               Ecto.Changeset.apply_changes(changeset)
+
+      # Boolean
+      attrs2 = %{
+        name: "Elvis",
+        answer: %{tag: "boolean", answer: true}
+      }
+
+      changeset2 = Answer.changeset(attrs2)
+      assert %Ecto.Changeset{} = changeset
+
+      assert %Answer{answer: %EctoSumEmbedsTest.Boolean{}} =
+               Ecto.Changeset.apply_changes(changeset2)
     end
 
     test "Cast failures" do
@@ -83,9 +94,10 @@ defmodule EctoSumEmbedsTest do
       }
 
       changeset = Answer.changeset(attrs)
-      assert %Ecto.Changeset{} = changeset
+      assert %Ecto.Changeset{valid?: false} = changeset
+      IO.inspect(changeset, label: "changeset")
 
-      IO.inspect(changeset, label: "cast failure changeset")
+      # IO.inspect(changeset, label: "cast failure changeset")
     end
   end
 end
