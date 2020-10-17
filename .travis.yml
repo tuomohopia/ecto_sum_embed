@@ -22,7 +22,6 @@ env:
   - PG_PORT=5432
   - CI=travis
 
-
 before_script:
 # - cp config/travis.exs config/test.exs
 - psql --version
@@ -49,6 +48,10 @@ jobs:
     name: Elixir v1.11.1
     env:
     - MIX_ENV=dev
+    before_script:
+      - mix clean --all
+    script: 
+      - mix compile --warnings-as-errors
 #   - stage: Dialyzer
 #     name: Elixir v1.11.1
 #     env:
