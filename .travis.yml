@@ -28,7 +28,7 @@ before_script:
 - psql --version
 - mix deps.get
 - mix compile
-- mix ecto.setup
+# - mix ecto.setup
 
 notifications:
   email: false
