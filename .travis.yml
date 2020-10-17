@@ -2,7 +2,7 @@ git:
   depth: 5
 language: elixir
 elixir: '1.11.1'
-# otp_release: '23.0'
+otp_release: '23.0'
 cache:
   directories:
   - .mix
@@ -34,30 +34,21 @@ notifications:
 jobs:
   include:
   - stage: Unit tests
-    name: Elixir v1.10.4
+    name: Elixir v1.11.1
     env:
     - MIX_ENV=test
     script: mix test
-  - stage: Credo
-    name: Elixir v1.10.4
-    env:
-    - MIX_ENV=dev
-    before_script:
-    - mix deps.get
-    - mix compile
-    script: mix credo
+#   - stage: Credo
+#     name: Elixir v1.11.1
+#     env:
+#     - MIX_ENV=dev
+#     script: mix credo
   - stage: Compile test (warnings as errors)
-    name: Elixir v1.10.4
+    name: Elixir v1.11.1
     env:
     - MIX_ENV=dev
-  - stage: Dialyzer
-    name: Elixir v1.10.4
-    env:
-    - MIX_ENV=dev
-    before_script:
-    - mix deps.get
-    - mix compile
-    script: travis_wait mix dialyzer --format short --halt-exit-status
-    before_script:
-    - mix deps.get
-    script: mix compile --warnings-as-errors
+#   - stage: Dialyzer
+#     name: Elixir v1.11.1
+#     env:
+#     - MIX_ENV=dev
+#     script: travis_wait mix dialyzer --format short --halt-exit-status
