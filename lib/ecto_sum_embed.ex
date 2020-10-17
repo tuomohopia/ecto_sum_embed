@@ -1,4 +1,4 @@
-defmodule EctoSumEmbeds do
+defmodule EctoSumEmbed do
   @moduledoc """
   Adds `:embeds_one_of` functionality to Ecto Schemas.
   """
@@ -6,7 +6,7 @@ defmodule EctoSumEmbeds do
   @doc false
   defmacro __using__(_) do
     quote do
-      import EctoSumEmbeds
+      import EctoSumEmbed
     end
   end
 
@@ -14,7 +14,7 @@ defmodule EctoSumEmbeds do
     schema_full = Macro.expand(schema, caller)
 
     quote do
-      EctoSumEmbeds.__option__(__MODULE__, unquote(field), unquote(schema_full))
+      EctoSumEmbed.__option__(__MODULE__, unquote(field), unquote(schema_full))
     end
   end
 
@@ -38,7 +38,7 @@ defmodule EctoSumEmbeds do
       # Create host module
       # whose `changeset/2` determines which type to give back to caller
       {:module, module, _binary, _term} =
-        EctoSumEmbeds.create_embedded_module(
+        EctoSumEmbed.create_embedded_module(
           unquote(name),
           unquote(caller),
           unquote(Macro.escape(block))
@@ -63,7 +63,7 @@ defmodule EctoSumEmbeds do
       quote do
         use Ecto.Schema
         alias Ecto.Changeset
-        use EctoSumEmbeds
+        use EctoSumEmbed
 
         @tag_key :tag
 

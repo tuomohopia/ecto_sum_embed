@@ -1,9 +1,9 @@
-defmodule EctoSumEmbeds.MixProject do
+defmodule EctoSumEmbed.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :ecto_sum_embeds,
+      app: :ecto_sum_embed,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule EctoSumEmbeds.MixProject do
       homepage_url: "https://github.com/tuomohopia/ecto_sum_embed",
       docs: [
         # The main page in the docs
-        main: "EctoSumEmbeds",
+        main: "EctoSumEmbed",
         extras: ["README.md"]
       ]
     ]
