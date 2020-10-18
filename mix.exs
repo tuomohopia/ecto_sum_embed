@@ -15,7 +15,7 @@ defmodule EctoSumEmbeds.MixProject do
       homepage_url: "https://github.com/tuomohopia/ecto_sum_embed",
       docs: [
         # The main page in the docs
-        main: "EctoSumEmbeds",
+        main: "readme",
         extras: ["README.md"]
       ]
     ]
