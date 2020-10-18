@@ -12,7 +12,7 @@ defining a sum type whose each member is an embedded schema.
 
 ```elixir
 defmodule Citizen do
-  use EctoSumEmbeds
+  use EctoSumEmbeds # Import library to scope
   use Ecto.Schema
   import Ecto.Changeset
   alias Citizen.{Student, Graduate, Professional}
@@ -21,26 +21,27 @@ defmodule Citizen do
     field :name, :string
     field birth_year: :integer
 
-    embeds_one_of :profession do
-      option :student, Student # sum member types
+    embeds_one_of :profession do # `:profession` is the field name
+      option :student, Student # Sum member types
       option :graduate, Graduate
       option :professional, Professional
-
-      opts tag_key: :tag, source: :answer, :on_replace: :raise
     end
   end
 
-  def changeset(attrs) do
-    %__MODULE__{}
+  def changeset(schema, attrs) do
+    schema
     |> cast(attrs, [:name])
-    |> cast_embed(:answer) # cast 
+    |> cast_embed(:answer) # Cast sum embeds using Ecto's own `cast_embed/3`
   end
 end
 ```
 
 Here `Student`, `Graduate` and `Professional` modules are normal
-embedded schema modules with their own validation logic. No need
-to import `ecto_sum_embeds` here.
+embedded schema modules with their own validation logic.
+
+However, we need to add a field `:tag` with a default string value matching
+each `option` second parameter atom. This is so that we can infer the right embedded schema to use
+when pulling the record from the database.
 
 ```elixir
 defmodule Citizen.Student do
@@ -49,20 +50,21 @@ defmodule Citizen.Student do
 
   @primary_key false
   embedded_schema do
+    field :tag, :string, default: "student" 
     field :school, :string
     field :enrollment_year, :integer
   end
 
   def changeset(schema, attrs) do
     schema
-    |> cast(attrs, [:school, :enrollment_year])
+    |> cast(attrs, [:school, :enrollment_year]) # do not cast :tag
     |> validate_required([:school])
   end
 end
 ```
 
 Ecto Sum Embed defaults to using the first paramter to `option` as the
-tag value determining what type...
+tag value determining what type.
 
 ## Installation
 
@@ -79,11 +81,14 @@ def deps do
 end
 ```
 
-### Formatter
-
-Add formatter rules for `option` and `opts` for 
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/ecto_sum_embed](https://hexdocs.pm/ecto_sum_embed).
+
+### Formatter
+
+Add formatter rules for `option` and `opts` for
+
+## Advanced use
 
