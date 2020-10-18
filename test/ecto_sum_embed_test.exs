@@ -1,100 +1,125 @@
 defmodule EctoSumEmbedTest do
   use ExUnit.Case
 
-  describe "Sum embed" do
-    defmodule Boolean do
+  describe "Changeset" do
+    defmodule Citizen.Professional do
       use Ecto.Schema
       import Ecto.Changeset
 
       @primary_key false
       embedded_schema do
-        field :answer, :boolean
+        field :tag, :string, default: "professional"
+        field :employer, :string
+        field :position, :string
       end
 
       def changeset(schema \\ %__MODULE__{}, attrs) do
         schema
-        |> cast(attrs, [:answer])
+        |> cast(attrs, [:employer])
+        |> validate_required([:employer])
       end
     end
 
-    defmodule ChooseOne do
+    defmodule Citizen.Student do
       use Ecto.Schema
       import Ecto.Changeset
 
       @primary_key false
       embedded_schema do
-        field :one, :string
+        field :tag, :string, default: "student"
+        field :school, :string
+        field :enrollment_year, :integer
       end
 
       def changeset(schema \\ %__MODULE__{}, attrs) do
         schema
-        |> cast(attrs, [:one])
-        |> validate_required([:one])
+        |> cast(attrs, [:school, :enrollment_year])
+        |> validate_required([:school])
       end
     end
 
-    defmodule Answer do
+    defmodule Citizen do
       use EctoSumEmbed
       use Ecto.Schema
       import Ecto.Changeset
-      alias EctoSumEmbedTest.{Boolean, ChooseOne}
+      alias __MODULE__.{Student, Professional}
 
-      schema "answers" do
+      schema "citizens" do
         field :name, :string
 
-        embeds_one_of :answer do
-          option :boolean, Boolean
-          option :choose_one, ChooseOne
+        embeds_one_of :profession do
+          option :student, Student
+          option :professional, Professional
         end
 
-        embeds_one :choose_one_normal, ChooseOne
+        embeds_one :job, Professional
       end
 
       def changeset(attrs) do
         %__MODULE__{}
         |> cast(attrs, [:name])
-        |> cast_embed(:choose_one_normal)
-        |> cast_embed(:answer)
-        |> validate_required([:name, :answer, :choose_one_normal])
+        |> cast_embed(:job)
+        |> cast_embed(:profession)
+        |> validate_required([:name, :profession, :job])
       end
     end
 
-    test "Changeset produces correct polymorphic type" do
-      # ChooseOne
-      attrs = %{
+    # setup do
+    #   professional =
+    # end
+
+    test "produces correct sum type when external parameters have a valid tag and value" do
+      professional_attrs = %{
         name: "Elvis",
-        answer: %{tag: "choose_one", one: "happy"},
-        choose_one_normal: %{one: "Good"}
+        profession: %{tag: "professional", employer: "NASA"},
+        job: %{employer: "government"}
       }
 
-      changeset = Answer.changeset(attrs)
-      assert %Ecto.Changeset{} = changeset
+      professional_changeset = Citizen.changeset(professional_attrs)
+      assert %Ecto.Changeset{valid?: true} = professional_changeset
 
-      assert %Answer{answer: %EctoSumEmbedTest.ChooseOne{}} =
-               Ecto.Changeset.apply_changes(changeset)
+      assert %Citizen{
+               profession: %EctoSumEmbedTest.Citizen.Professional{employer: "NASA"},
+               job: %EctoSumEmbedTest.Citizen.Professional{employer: "government"}
+             } = Ecto.Changeset.apply_changes(professional_changeset)
 
       # Boolean
       attrs2 = %{
         name: "Elvis",
-        answer: %{tag: "boolean", answer: true}
+        profession: %{tag: "student", school: "MIT"}
       }
 
-      changeset2 = Answer.changeset(attrs2)
-      assert %Ecto.Changeset{} = changeset
+      changeset2 = Citizen.changeset(attrs2)
+      assert %Ecto.Changeset{} = changeset2
 
-      assert %Answer{answer: %EctoSumEmbedTest.Boolean{}} =
+      assert %Citizen{profession: %EctoSumEmbedTest.Citizen.Student{school: "MIT"}} =
                Ecto.Changeset.apply_changes(changeset2)
     end
 
-    test "Cast failures" do
+    test "produces a failure changeset when no `profession` tag supplied" do
       attrs = %{
         name: 3,
-        answer: %{tag: "whatever"},
-        choose_one_normal: %{}
+        hello: %{tag: "whatever"},
+        job: %{}
       }
 
-      changeset = Answer.changeset(attrs)
+      changeset = Citizen.changeset(attrs)
       assert %Ecto.Changeset{valid?: false} = changeset
+      assert %Citizen{profession: nil} = Ecto.Changeset.apply_changes(changeset)
+    end
+
+    test "produces a failure changeset when faulty `profession` tag value" do
+      attrs = %{
+        name: "Preston",
+        profession: %{tag: "whatever"},
+        job: %{}
+      }
+
+      changeset = Citizen.changeset(attrs)
+      IO.inspect(changeset, label: "changeset")
+      IO.inspect(changeset |> Ecto.Changeset.apply_changes(), label: "changeset")
+      assert %Ecto.Changeset{valid?: false} = changeset
+      assert %Citizen{profession: nil} = Ecto.Changeset.apply_changes(changeset)
     end
   end
 end
