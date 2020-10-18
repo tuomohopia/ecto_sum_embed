@@ -1,4 +1,4 @@
-# Ecto Sum Embeds
+# EctoSumEmbed
 [![Build Status](https://travis-ci.com/tuomohopia/ecto_sum_embed.svg?token=kkyD4t9rsytpc3U64M9V&branch=master)](https://travis-ci.com/tuomohopia/ecto_sum_embed)
 > Embed sum types with `embeds_one_of` in Ecto
 ---
@@ -67,14 +67,14 @@ tag value determining what type...
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ecto_sum_embeds` to your list of dependencies in `mix.exs`:
+by adding `ecto_sum_embed` to your list of dependencies in `mix.exs`:
 
 ### Dependency
 
 ```elixir
 def deps do
   [
-    {:ecto_sum_embeds, "~> 0.1.0"}
+    {:ecto_sum_embed, "~> 0.1.0"}
   ]
 end
 ```
@@ -85,5 +85,5 @@ Add formatter rules for `option` and `opts` for
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/ecto_sum_embeds](https://hexdocs.pm/ecto_sum_embeds).
+be found at [https://hexdocs.pm/ecto_sum_embed](https://hexdocs.pm/ecto_sum_embed).
 
