@@ -1,4 +1,5 @@
 defmodule EctoSumEmbed.Support.Citizen.Professional do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -9,6 +10,10 @@ defmodule EctoSumEmbed.Support.Citizen.Professional do
     field :position, :string
   end
 
+  @spec changeset(
+          {map, map} | %{:__struct__ => atom | %{__changeset__: map}, optional(atom) => any},
+          :invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}
+        ) :: Ecto.Changeset.t()
   def changeset(schema \\ %__MODULE__{}, attrs) do
     schema
     |> cast(attrs, [:employer])
@@ -17,6 +22,7 @@ defmodule EctoSumEmbed.Support.Citizen.Professional do
 end
 
 defmodule EctoSumEmbed.Support.Citizen.Student do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -37,6 +43,7 @@ end
 # Using `embeds_one_of`
 
 defmodule EctoSumEmbed.Support.Citizen do
+  @moduledoc false
   use EctoSumEmbed
   use Ecto.Schema
   import Ecto.Changeset
@@ -62,6 +69,7 @@ end
 # Normal schema using `embeds_one`
 
 defmodule EctoSumEmbed.Support.NormalCitizen do
+  @moduledoc false
   use EctoSumEmbed
   use Ecto.Schema
   import Ecto.Changeset

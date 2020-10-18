@@ -1,9 +1,13 @@
 defmodule EctoSumEmbed.ChangesetTest do
-  use EctoSumEmbed.DataCase
+  @moduledoc false
+  use EctoSumEmbed.DataCase, async: true
 
   alias EctoSumEmbed.Support.Citizen
+  alias EctoSumEmbed.Support.Citizen.Student
   alias EctoSumEmbed.Support.NormalCitizen
   alias Ecto.Changeset
+
+  require EctoSumEmbed
 
   def attrs_fixture do
     prof_valid = %{
@@ -46,9 +50,10 @@ defmodule EctoSumEmbed.ChangesetTest do
       attrs_fixture()
     end
 
-    test "behaves identically at changeset level with embeds_one with valid attrs", %{
-      valid: [_prof, student | _grad]
-    } do
+    test "behaves identically at changeset level with embeds_one with valid attrs with default tag",
+         %{
+           valid: [_prof, student | _grad]
+         } do
       normal_student_attrs = %{name: student.name, student: student.profession}
       normal_changeset = NormalCitizen.changeset(normal_student_attrs)
       sum_changeset = Citizen.changeset(student)
@@ -64,6 +69,35 @@ defmodule EctoSumEmbed.ChangesetTest do
       assert normal_applied.name == sum_applied.name
       assert normal_applied.id == sum_applied.id
       assert normal_applied.student == sum_applied.profession
+    end
+  end
+
+  describe "put_embed_of/4" do
+    setup do
+      attrs_fixture()
+    end
+
+    test "behaves identically with Ecto's native put_embed/4",
+         %{
+           valid: [_prof, student | _grad]
+         } do
+      # Make valid embedded changeset
+      student_embedded_attrs = %{school: student.profession.school}
+      student_changeset = Student.changeset(student_embedded_attrs)
+      assert %Changeset{valid?: true} = student_changeset
+
+      # Make Citizen and NormalCitizen changesets without embed
+      attrs = %{name: student.name}
+      normal_changeset = NormalCitizen.changeset(attrs)
+      sum_changeset = Citizen.changeset(attrs)
+      assert %Changeset{valid?: false} = normal_changeset
+      assert %Changeset{valid?: false} = sum_changeset
+
+      # Put embeds
+      normal_with_embed = Changeset.put_embed(normal_changeset, :student, student_changeset)
+      # use custom `put_embed_of`
+      sum_with_embed = EctoSumEmbed.put_embed_of(sum_changeset, :profession, student_changeset)
+      assert normal_with_embed.changes.student == sum_with_embed.changes.profession
     end
   end
 end

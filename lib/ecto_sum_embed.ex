@@ -3,6 +3,8 @@ defmodule EctoSumEmbed do
   Adds `:embeds_one_of` functionality to Ecto Schemas.
   """
 
+  alias Ecto.Changeset
+
   @doc false
   defmacro __using__(_) do
     quote do
@@ -120,6 +122,31 @@ defmodule EctoSumEmbed do
       end
 
     Module.create(module, ast, Macro.Env.location(__ENV__))
+  end
+
+  @doc """
+  Replaces `Ecto.Changeset.put_embed/4` for `embeds_one_of` structs.
+
+  In modules outside of the changeset module, call by:
+
+      require EctoSumEmbeds
+
+      EctoSumEmbeds.put_embed_of(changeset, :profession, student_changeset)
+
+  """
+  def put_embed_of(changeset, name, embedded_changeset, opts \\ []) do
+    embedded_struct = Changeset.apply_changes(embedded_changeset)
+    embedded_module = embedded_struct.__struct__
+
+    {:embed, ecto_embedded} =
+      changeset
+      |> Map.fetch!(:types)
+      |> Map.fetch!(name)
+
+    ecto_embedded = {:embed, %Ecto.Embedded{ecto_embedded | related: embedded_module}}
+    changeset = put_in(changeset.types[name], ecto_embedded)
+
+    Changeset.put_embed(changeset, name, embedded_changeset, opts)
   end
 
   def __option__(mod, name, schema) do

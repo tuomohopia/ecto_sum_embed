@@ -116,10 +116,7 @@ defmodule EctoSumEmbedTest do
       }
 
       changeset = Citizen.changeset(attrs)
-      IO.inspect(changeset, label: "changeset")
-      IO.inspect(changeset |> Ecto.Changeset.apply_changes(), label: "changeset")
       assert %Ecto.Changeset{valid?: false} = changeset
-      assert %Citizen{profession: nil} = Ecto.Changeset.apply_changes(changeset)
     end
   end
 end
